@@ -596,12 +596,10 @@ static void log_hangup_info(const char * hanguptype, constChannelPtr c, PBX_CHAN
                                " - pbx_channel_hangup_locked: %s\n"
                                " - runningPbxThread: %s\n"
                                " - pbx_channel_is_bridged: %s\n"
-                               " - pbx_channel_pbx: %s\n"
-                               " - soft_hangup_set: %s\n",
+                               " - pbx_channel_pbx: %s\n",
                                c->designator, hanguptype, pbx_channel ? pbx_channel_name(pbx_channel) : "", pbx_channel ? pbx_test_flag(pbx_channel_flags(pbx_channel), AST_FLAG_ZOMBIE) ? "YES" : "NO" : "",
                                pbx_channel ? pbx_test_flag(pbx_channel_flags(pbx_channel), AST_FLAG_BLOCKING) ? "YES" : "NO" : "", pbx_channel ? pbx_check_hangup_locked(pbx_channel) ? "YES" : "NO" : "",
-                               c->isRunningPbxThread ? "YES" : "NO", iPbx.channel_is_bridged((channelPtr)c) ? "YES" : "NO", pbx_channel ? pbx_channel_pbx(pbx_channel) ? "YES" : "NO" : "",
-                               ast_channel_softhangup_internal_flag(pbx_channel) ? "YES" : "NO");
+                               c->isRunningPbxThread ? "YES" : "NO", iPbx.channel_is_bridged((channelPtr)c) ? "YES" : "NO", pbx_channel ? pbx_channel_pbx(pbx_channel) ? "YES" : "NO" : "");
 #if CS_REFCOUNT_DEBUG
         AUTO_RELEASE(sccp_device_t, d, sccp_channel_getDevice(c));
         if(d) {
@@ -631,17 +629,12 @@ static boolean_t sccp_astgenwrap_handleHangup(constChannelPtr channel, const cha
 				AUTO_RELEASE(sccp_device_t, d, sccp_channel_getDevice(c));
 				if(d) {
 					sccp_indicate(d, c, SCCP_CHANNELSTATE_ONHOOK);
-					if (pbx_channel && ast_channel_softhangup_internal_flag(pbx_channel)) {
-						sccp_log(DEBUGCAT_PBX)("%s: (%s): Process tail end of requested softhangup\n", c->designator, hanguptype);
-						ast_hangup(pbx_channel);
-					} else {
-						sccp_log(DEBUGCAT_PBX)("%s: (%s): Onhook Only\n", c->designator, hanguptype);
-						if (iPbx.dumpchan) {
-							char * buf = sccp_alloca(sizeof(char) * 2048);
-							iPbx.dumpchan(pbx_channel, buf, 2048);
-							sccp_log(DEBUGCAT_PBX)("SCCP: (dumpchan) %s", buf);
-						}
-					}
+					sccp_log(DEBUGCAT_PBX)("%s: (%s): Onhook Only\n", c->designator, hanguptype);
+				}
+				if (iPbx.dumpchan) {
+					char * buf = sccp_alloca(sizeof(char) * 2048);
+					iPbx.dumpchan(pbx_channel, buf, 2048);
+					sccp_log(DEBUGCAT_PBX)("SCCP: (dumpchan) %s", buf);
 				}
 				res = TRUE;
 				break;
